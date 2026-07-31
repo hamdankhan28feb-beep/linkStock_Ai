@@ -27,6 +27,7 @@ def _enrich_inventory(inv: dict, products_map: dict) -> dict:
     }
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 def list_inventory(current_user=Depends(require_distributor_or_warehouse)):
     invs = inventory_table.select("*")

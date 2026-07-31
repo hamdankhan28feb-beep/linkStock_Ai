@@ -47,6 +47,7 @@ def _enrich_order(o: dict, items: list, users_map: dict, locations_map: dict, pr
     }
 
 
+@router.post("", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def place_order(payload: dict, current_user=Depends(require_retailer)):
     items_data = payload.get("items", [])
@@ -128,6 +129,7 @@ def place_order(payload: dict, current_user=Depends(require_retailer)):
     return get_order(order["id"], current_user)
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 def list_orders(status_filter: Optional[str] = Query(None, alias="status"), current_user=Depends(get_current_user)):
     role = current_user.get("role") if isinstance(current_user, dict) else str(current_user.role)

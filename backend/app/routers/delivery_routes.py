@@ -379,6 +379,7 @@ def generate_clusters(payload: dict, current_user=Depends(require_distributor)):
     }
 
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 def list_routes(current_user=Depends(require_distributor)):
     routes = delivery_routes_table.select("*", distributor_id=current_user["id"])

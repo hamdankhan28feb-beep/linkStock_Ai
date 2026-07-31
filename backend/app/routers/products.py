@@ -36,6 +36,7 @@ def list_categories(current_user=Depends(get_current_user)):
     return cats
 
 
+@router.get("", response_model=List[dict], include_in_schema=False)
 @router.get("/", response_model=List[dict])
 def list_products(
     category: Optional[str] = Query(None),
@@ -75,6 +76,7 @@ def get_product(product_id: str, current_user=Depends(get_current_user)):
     return _enrich_product(p, inv_map)
 
 
+@router.post("", status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_product(payload: dict, current_user=Depends(require_warehouse)):
     existing = products_table.select("id", sku=payload.get("sku"))
