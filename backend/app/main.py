@@ -16,6 +16,7 @@ from app.routers import (
     routes_router,
     route_stops_router,
 )
+from fastapi import status
 
 
 @asynccontextmanager
@@ -40,6 +41,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -73,3 +75,13 @@ def root():
         "docs": "/docs",
         "version": settings.APP_VERSION,
     }
+
+
+@app.post("/api/ext/activate", tags=["Extensions"])
+def activate_extension():
+    return {"ok": True, "status": "activated", "service": "fastapi"}
+
+
+@app.post("/api/ext/auth-token", tags=["Extensions"])
+def auth_token_extension():
+    return {"ok": True, "status": "token-ready", "service": "fastapi"}

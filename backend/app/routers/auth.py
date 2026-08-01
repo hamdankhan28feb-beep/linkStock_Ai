@@ -4,6 +4,7 @@ Auth router — rewritten to use Supabase REST API.
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import List
+from app.config import settings
 from app.supabase_client import users_table, locations_table
 from app.services.auth_service import hash_password, create_access_token, verify_password
 from app.dependencies import get_current_user
@@ -23,16 +24,67 @@ def _user_out(u: dict) -> dict:
     }
 
 
+def _user_from_demo_account(email: str, password: str):
+    demo_accounts = {
+        settings.DEMO_WAREHOUSE_EMAIL.lower(): {
+            "id": "demo-warehouse",
+            "name": "Warehouse Admin",
+            "email": settings.DEMO_WAREHOUSE_EMAIL.lower(),
+            "password": settings.DEMO_WAREHOUSE_PASSWORD,
+            "role": "warehouse",
+            "phone": "+92-21-35001234",
+        },
+        settings.DEMO_DISTRIBUTOR_EMAIL.lower(): {
+            "id": "demo-distributor",
+            "name": "Distributor",
+            "email": settings.DEMO_DISTRIBUTOR_EMAIL.lower(),
+            "password": settings.DEMO_DISTRIBUTOR_PASSWORD,
+            "role": "distributor",
+            "phone": "+92-21-32561234",
+        },
+        settings.DEMO_RETAILER_EMAIL.lower(): {
+            "id": "demo-retailer",
+            "name": "Retailer",
+            "email": settings.DEMO_RETAILER_EMAIL.lower(),
+            "password": settings.DEMO_RETAILER_PASSWORD,
+            "role": "retailer",
+            "phone": "+92-333-1234501",
+        },
+    }
+
+    account = demo_accounts.get((email or "").strip().lower())
+    if not account:
+        return None
+    if account["password"] != password:
+        return None
+    return {
+        "id": account["id"],
+        "name": account["name"],
+        "email": account["email"],
+        "phone": account["phone"],
+        "role": account["role"],
+        "is_active": True,
+        "created_at": None,
+        "password_hash": hash_password(account["password"]),
+    }
+
+
 def _authenticate_user(email: str, password: str):
-    users = users_table.select("*", email=email)
-    if not users:
-        return None
-    user = users[0]
-    if not user.get("is_active", True):
-        return None
-    if not verify_password(password, user.get("password_hash", "")):
-        return None
-    return user
+    normalized_email = (email or "").strip().lower()
+    try:
+        users = users_table.select("*", email=normalized_email)
+    except Exception:
+        users = []
+
+    if users:
+        user = users[0]
+        if not user.get("is_active", True):
+            return None
+        if not verify_password(password, user.get("password_hash", "")):
+            return None
+        return user
+
+    return _user_from_demo_account(normalized_email, password)
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)

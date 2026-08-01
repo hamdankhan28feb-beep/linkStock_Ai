@@ -10,8 +10,8 @@ from app.config import settings
 SUPABASE_URL = settings.SUPABASE_URL
 SUPABASE_ANON_KEY = settings.SUPABASE_ANON_KEY
 
-# If service role key is provided in env, use it (bypasses RLS)
-SUPABASE_SERVICE_KEY = settings.SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY
+# Prefer the service-role key when available; fall back to the legacy service key or anon key.
+SUPABASE_SERVICE_KEY = settings.supabase_service_key_value
 
 REST_URL = f"{SUPABASE_URL}/rest/v1"
 
